@@ -38,6 +38,20 @@ module.exports =  class Character {
 
     }
 
+    static createFromOther(other) {
+        return this.create(
+            other.health,
+            other.mana,
+            other.experienceWorth,
+            other.moneyWorth,
+            other.damage.min,
+            other.damage.max,
+            other.defence.soft,
+            other.defence.hard,
+            other.attacks,
+            other.defences);
+    }
+
     receiveDamage(other, attackIndex, defenceIndex) {
         var attackdmg = other.attack(attackIndex);
 
@@ -62,7 +76,6 @@ module.exports =  class Character {
 
     attack(attackIndex) {
         console.log('[DEBUG] ' + (attackIndex  == undefined) + " | " + (attackIndex >= this.attacks.length) + " | "+(attackIndex < 0) +" | "+attackIndex);
-        console.log('[debug temp]' + this.attacks.length);
         if(attackIndex == undefined || attackIndex >= this.attacks.length || attackIndex < 0)
             return 0;
         
