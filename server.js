@@ -92,7 +92,8 @@ io.on('connection', function(socket){
                     enemy = floor.getEnemy(floorPos);
                 }
 
-                var enemyStatus = {health: {amount: enemy.health, max: enemy.healthPoolCap},mana: enemy.mana};
+                var enemyStatus = {health: {amount: enemy.health, max: enemy.healthPoolCap},
+                mana: {amount: enemy.mana, max: enemy.manaPoolCap}};
     
                 //send battle data
                 socket.emit('battle', new Message(
@@ -107,7 +108,8 @@ io.on('connection', function(socket){
         {
             enemy = floor.getEnemy(0);
 
-            var enemyStatus = {health: {amount: enemy.health, max: enemy.healthPoolCap},mana: enemy.mana};
+            var enemyStatus = {health: {amount: enemy.health, max: enemy.healthPoolCap},
+            mana: {amount: enemy.mana, max: enemy.manaPoolCap}};
     
             //send battle data
             socket.emit('battle', new Message(
@@ -131,20 +133,22 @@ io.on('connection', function(socket){
             EattackIndex = (EisAttack)? EattackIndex : -1;//FIX ATTACK INDEX - REST IT IF DEFENCE IS SET
 
             //inflict dmg from player to enemy
-            var isAlive = enemy.receiveDamage(player, attackIndex, EdefenceIndex);
+            var isAliveE = enemy.receiveDamage(player, attackIndex, EdefenceIndex);
+
+            //inflict dmg from enemy to player
+            var isAliveP = player.receiveDamage(enemy, EattackIndex, defenceIndex);
+
             var enemyStatus = {health: {amount: enemy.health, max: enemy.healthPoolCap},
             mana: {amount: enemy.mana, max: enemy.manaPoolCap},
             action: (EattackIndex >= 0)? enemy.attacks[EattackIndex].id : enemy.defences[EdefenceIndex].id,
             isAttack: EisAttack,
-            isDead: !isAlive};
+            isDead: !isAliveE};
             
-            //inflict dmg from enemy to player
-            isAlive = player.receiveDamage(enemy, EattackIndex, defenceIndex);
             var playerStatus = {health: {amount: player.health, max: player.healthPoolCap},
             mana: {amount: player.mana, max: player.manaPoolCap},
             action: msg.data.action,
             isAttack: isAttack,
-            isDead: !isAlive};
+            isDead: !isAliveP};
 
             //send battle data
             socket.emit('battle', new Message(
