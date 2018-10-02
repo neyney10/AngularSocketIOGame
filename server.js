@@ -8,20 +8,20 @@ var Character = require('./character');
 var Player = require('./player');
 var Floor = require('./floor');
 var Attack = require('./attack');
-var Defence = require('./attack');
+var Defence = require('./defence');
 var Message = require('./message');
 
 //pre-defined values
 var attacks = [
-    new Attack('Punch',10,2),
-    new Attack('Sword Slash',20,6),
-    new Attack('Magic orb',25,9)
+    new Attack('Punch',10,2,0),
+    new Attack('Sword Slash',20,6, 1),
+    new Attack('Magic orb',25,9, 2)
 ];
 
 var defences = [
-    new Defence('Evade',100, 35, 8),
-    new Defence('Hand Guard',45, 85, 6),
-    new Defence('Shield', 80, 65, 5)
+    new Defence('Evade',100, 35, 8, 0),
+    new Defence('Hand Guard',45, 85, 6, 1),
+    new Defence('Shield', 80, 65, 5, 2)
 ];
 
 var floors = [
@@ -52,7 +52,7 @@ io.on('connection', function(socket){
     var floorIndex = 0; //which floor am i at
     var floorPos = 0; //where inside the floor am i -> enemies
     var enemy; 
-    var player = new Player();
+    var player = new Player("merlin");
 
     //when recieving a simple message event
     socket.on('message', function(msg){
@@ -84,63 +84,73 @@ io.on('connection', function(socket){
                 if(floorPos < floor.enemies.length-1)
                 {
                     enemy = floor.getEnemy(++floorPos);
-                    socket.emit('battle', new Message("enemy-update", "status", {health: {amount: enemy.health, max: enemy.healthPoolCap}, mana: enemy.mana})); //send current enemy health and mana    
                 }
                 else { //finished 
                     console.log('floor up');
                     floor = floors[++floorIndex];
                     floorPos = 0;
                     enemy = floor.getEnemy(floorPos);
-                    socket.emit('battle', new Message("enemy-update", "status", {health: {amount: enemy.health, max: enemy.healthPoolCap}, mana: enemy.mana})); //send current enemy health and mana    
                 }
 
-
-                // enemy = new Character(); 
-                // enemy.mana = 1000;
-                // enemy.healthPoolCap = Math.floor(30+Math.random()*25);
-                // enemy.health = enemy.healthPoolCap;
-                // enemy.defence = {soft: Math.floor(Math.random()*6), hard: Math.floor(Math.random()*25)}
-                // socket.emit('battle', new Message("enemy-update", "status", {health: {amount: enemy.health, max: enemy.healthPoolCap}, mana: enemy.mana})); //send current enemy health and mana    
-            }
+                var enemyStatus = {health: {amount: enemy.health, max: enemy.healthPoolCap},mana: enemy.mana};
+    
+                //send battle data
+                socket.emit('battle', new Message(
+                    "update",
+                    "new-enemy",
+                    enemyStatus));
+            
+             }
         }
         else
         if(msg.type == "start" && msg.event == "start")  //Start a Battle
         {
             enemy = floor.getEnemy(0);
-            socket.emit('battle', new Message("enemy-update", "status", {health: {amount: enemy.health, max: enemy.healthPoolCap}, mana: enemy.mana})); //send current enemy health and mana    
-                
-            // enemy = new Character(); 
-            // enemy.mana = 1000;
-            // enemy.healthPoolCap = Math.floor(30+Math.random()*25);
-            // enemy.health = enemy.healthPoolCap;
-            // enemy.defence = {soft: Math.floor(Math.random()*6), hard: Math.floor(Math.random()*25)}
-            // socket.emit('battle', new Message("enemy-update", "status", {health: {amount: enemy.health, max: enemy.healthPoolCap}, mana: enemy.mana})); //send current enemy health and mana
+
+            var enemyStatus = {health: {amount: enemy.health, max: enemy.healthPoolCap},mana: enemy.mana};
+    
+            //send battle data
+            socket.emit('battle', new Message(
+                "update",
+                "new-enemy",
+                enemyStatus));
         }
         else
         if(msg.type == "action" && msg.event == "move") // in-battle actions of attacking and defending
         {
-            if((msg.data.attackIndex < 0 && msg.data.defenceIndex < 0) || (msg.data.attackIndex >= 0 && msg.data.defenceIndex >= 0))
+            if(msg.data.action == undefined ||msg.data.action < 0 || msg.data.isAttack == undefined)
                 return; // DO NOTHING
 
+            var isAttack = msg.data.isAttack;
+            var attackIndex = (isAttack) ? msg.data.action : -1;
+            var defenceIndex = (!isAttack) ? msg.data.action : -1;
+
+            var EattackIndex = Math.floor(Math.random()*enemy.attacks.length); //choose an attack
+            var EisAttack = (enemy.mana >= enemy.attacks[EattackIndex].manaCost); //see if there is enough mana, if not then choose defence
+            var EdefenceIndex = (!EisAttack)? Math.floor(Math.random()*enemy.defences.length) : -1;
+            EattackIndex = (EisAttack)? EattackIndex : -1;//FIX ATTACK INDEX - REST IT IF DEFENCE IS SET
+
             //inflict dmg from player to enemy
-            var isAlive = enemy.receiveDamage(player, msg.data.attackIndex, -1);
-
-            socket.emit('battle', new Message("enemy-update", "status", {health: {amount: enemy.health, max: enemy.healthPoolCap}, mana: enemy.mana, action: 0, isAttack: true})); //send current enemy health and mana
-            if(!isAlive)
-                socket.emit('battle', new Message("enemy-update", "dead", ''));
-
+            var isAlive = enemy.receiveDamage(player, attackIndex, EdefenceIndex);
+            var enemyStatus = {health: {amount: enemy.health, max: enemy.healthPoolCap},
+            mana: {amount: enemy.mana, max: enemy.manaPoolCap},
+            action: (EattackIndex >= 0)? enemy.attacks[EattackIndex].id : enemy.defences[EdefenceIndex].id,
+            isAttack: EisAttack,
+            isDead: !isAlive};
+            
             //inflict dmg from enemy to player
-            var isAlive = player.receiveDamage(enemy, 0, msg.data.defenceIndex);
-            socket.emit('battle', new Message(
-                "player-update",
-                "status",
-                {health: {amount: player.health, max: player.healthPoolCap},
-                mana: player.mana,
-                action:(msg.data.defenceIndex == undefined) ? msg.data.attackIndex : msg.data.defenceIndex,
-                isAttack: msg.data.defenceIndex == undefined})); //send current enemy health and mana
-            if(!isAlive)
-                socket.emit('battle', new Message("player-update", "dead", player.health))
+            isAlive = player.receiveDamage(enemy, EattackIndex, defenceIndex);
+            var playerStatus = {health: {amount: player.health, max: player.healthPoolCap},
+            mana: {amount: player.mana, max: player.manaPoolCap},
+            action: msg.data.action,
+            isAttack: isAttack,
+            isDead: !isAlive};
 
+            //send battle data
+            socket.emit('battle', new Message(
+                "update",
+                "characters-status",
+                {player: playerStatus, enemy: enemyStatus}));
         }
     });
 
