@@ -31,10 +31,15 @@ module.exports = class Player extends Character {
     }
 
     removeItem(id) {
+        if(!id)
+            return undefined;
+
         var found = this.items.find(function(item) {
             return (item.id == id);
           });
 
+        if(!found)
+            return undefined;
        
         var index =  this.items.indexOf(found);
 
@@ -43,30 +48,16 @@ module.exports = class Player extends Character {
     }
 
     equip(e) {
+
+        this.unequip(e.equipfor); //if there is any equipment on place already then remove it/replace
+
         if(e.equipfor == 'weapon')
         {
-            if(this.equipment.weapon) { //if holding a weapon already
-                this.damage.min -= this.equipment.weapon.properties.min;
-                this.damage.max -= this.equipment.weapon.properties.max;
-
-                //return item to inventory
-                this.items.push(this.equipment.weapon);
-            }
-
             this.damage.min += e.properties.min;
             this.damage.max += e.properties.max;
             this.equipment.weapon = e;
         }
         else {
-
-            if(this.equipment[e.equipfor]) { //if holding a weapon already
-                this.defence.soft -= this.equipment[e.equipfor].properties.soft;
-                this.defence.hard -= this.equipment[e.equipfor].properties.hard;
-
-                //return item to inventory
-                this.items.push(this.equipment[e.equipfor]);
-            }
-
             this.defence.soft += e.properties.soft;
             this.defence.hard += e.properties.hard;
                 
@@ -74,6 +65,25 @@ module.exports = class Player extends Character {
         }
     }
 
+    unequip(e) {
+        if(e.equipfor == 'weapon')//if holding a weapon already
+        {
+            this.damage.min -= this.equipment['weapon'].properties.min;
+            this.damage.max -= this.equipment['weapon'].properties.max;
+
+            //return item to inventory
+            this.items.push(this.equipment[e.equipfor]);  
+        } else
+        if(this.equipment[e.equipfor]) { 
+            this.defence.soft -= this.equipment[e.equipfor].properties.soft;
+            this.defence.hard -= this.equipment[e.equipfor].properties.hard;
+
+            //return item to inventory
+            this.items.push(this.equipment[e.equipfor]);
+        }
+
+        this.equipment[e.equipfor] = undefined;
+    }
 
     
 }

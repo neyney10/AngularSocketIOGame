@@ -133,16 +133,34 @@ module.exports = function(http) {
                 case "equipment":
                     switch(msg.event) {
                         case "change"://need to create "equip(item)" function on player
+                        {//because of "let"
                             let item = player.removeItem(msg.data.id);
 
                             if(!item)
                                 break;
 
                             player.equip(item);
+
                             socket.emit('player', 
                                 new Message('equipment',
                                 'change', 
                                 {items: player.items, equipment: player.equipment}));
+                        }
+                        break;
+                        case "unequip":// 
+                        {//because of "let"
+                            let item = player.equipment[msg.data.equipto];
+
+                            if(!item)
+                                break;
+
+                            player.unequip(item);
+                            
+                            socket.emit('player', 
+                            new Message('equipment',
+                            'change', 
+                            {items: player.items, equipment: player.equipment}));
+                        }
                         break;
                     }
                 break;
