@@ -1,8 +1,10 @@
 var Character = require('./character');
+
 module.exports = class Floor {
-    constructor(name, enemies) {
+    constructor(name, id, enemies) {
         this.name = name;
         this.enemies = enemies.slice();
+        this.id = id;
     }
 
     getEnemy(index) {
