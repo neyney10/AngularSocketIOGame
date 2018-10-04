@@ -1,4 +1,4 @@
-var Character = require('./Character');
+var Character = require('./character');
 var Item = require('./Item');
 module.exports = class Player extends Character {
     
