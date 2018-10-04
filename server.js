@@ -5,11 +5,11 @@ require('./gameserver')(http); //GAME SERVER WITH SOCKET.IO
 
 //app http routes
 app.get('/', function(req, res){
-    res.sendFile(__dirname +'/app/client/dist/client/index.html');
+    res.sendFile(__dirname +'/app-prod-heroku/index.html');
   });
 
 app.get('*', function(req, res){
-    res.sendFile(__dirname +'/app/client/dist/client/'+req.url);
+    res.sendFile(__dirname +'/app-prod-heroku/'+req.url);
   });
 
 //listen to port 3000 to recieve request and packets
