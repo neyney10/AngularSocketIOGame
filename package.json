@@ -1,0 +1,23 @@
+{
+  "name": "angular-game",
+  "version": "1.0.0",
+  "description": "first-angular-app with game",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.16.3",
+    "socket.io": "^2.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "game",
+    "angular",
+    "app",
+    "spa"
+  ],
+  "author": "X5Games",
+  "license": "ISC"
+}
