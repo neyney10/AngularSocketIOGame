@@ -28,21 +28,29 @@ var items = [
 ];
 
 var floors = [
-    new Floor('FLOOR 1', 0, [
+    new Floor('FLOOR 1 - Entrance', 0, [
                     Character.create(30, 10, 20, 30, 1, 5, 0, 0, [attacks[0]], [defences[1]]),
                     Character.create(40, 10, 25, 35, 0, 2, 1, 5, [attacks[0]], [defences[2]]),
                     Character.create(30, 15, 25, 25, 2, 7, 1, 0, [attacks[0]], [defences[1]]),
                     Character.create(35, 13, 20, 55, 1, 5, 2, 0, [attacks[0]], [defences[0]])]),
 
-    new Floor('FLOOR 2', 1, [
+    new Floor('FLOOR 2 - The minion dorms v1', 1, [
                     Character.create(40, 15, 40, 33, 1, 5, 0, 0, [attacks[0]], [defences[0]]),
                     Character.create(45, 12, 45, 33, 1, 3, 3, 10, [attacks[0]], [defences[1]]),
                     Character.create(35, 15, 35, 44, 2, 7, 1, 0, [attacks[1]], [defences[2]]),
                     Character.create(40, 13, 35, 80, 2, 6, 2, 5, [attacks[0]], [defences[0]])]),
-    new Floor('FLOOR 3', 2, [
+    new Floor('FLOOR 3 - The minion dorms v2', 2, [
                     Character.create(50, 12, 75, 55, 4, 5, 3, 0, [attacks[0]], [defences[0]]),
                     Character.create(65, 10, 80, 66, 2, 7, 5, 15, [attacks[0]], [defences[1]]),
-                    Character.create(60, 15, 90, 77, 0, 10, 3, 5, [attacks[1]], [defences[2]])])
+                    Character.create(60, 15, 90, 77, 0, 10, 3, 5, [attacks[1]], [defences[2]])]),
+
+    new Floor('FLOOR 4 - The minion dorms v3', 3, [
+                    Character.create(55, 25, 100, 88, 5, 15, 5, 20, [attacks[1]], [defences[0]]),
+                    Character.create(60, 20, 125, 76, 4, 17, 5, 15, [attacks[1]], [defences[1]]),
+                    Character.create(65, 20, 111, 90, 4, 10, 5, 20, [attacks[1]], [defences[2]])]),
+                    
+    new Floor('FLOOR 5 - [BOSS] The minion dorms', 3, [
+                    Character.create(100, 35, 500, 450, 7, 25, 7, 30, [attacks[1]], [defences[0]])])
                     
 ];
 
@@ -63,7 +71,7 @@ module.exports = function(http) {
         socket.on('message', function(msg){
             console.log("[msg]: "+JSON.stringify(msg));
     
-            socket.emit('message', msg);//ECHO
+            io.emit('message', msg);//ECHO BROADCAST
         })
         
         socket.on('game', (msg) => {
@@ -197,6 +205,10 @@ module.exports = function(http) {
                         highestFloorReached += (floor.id == highestFloorReached)? 1 : 0;
                         floor = floors[floor.id+1];
                         floorPos = 0;
+
+                        if(!floor)
+                           enemy = Floor.randomEnemy(player.level);
+                        else
                         enemy = floor.getEnemy(floorPos);
 
                         //send floor update

@@ -67,7 +67,7 @@ module.exports =  class Character {
             var dmg = Math.floor((basedmg-this.defence.soft)*(1-this.defence.hard/100));
                 dmg -= Math.floor(dmg*this.defend(defenceIndex));
 
-            this.health -= dmg;
+            this.health -= (dmg > 0)? dmg : 0;
             if(this.health <= 0) {
                 other.gainEXP(this.experienceWorth);
                 other.gainMoney(this.moneyWorth);
